@@ -49,23 +49,20 @@ app.put('/person/:id', (req, res) => {
     const { name, age } = req.body
     const id = req.params.id
 
-    return Person.findByIdAndUpdate(id, { name: name, age: age }, { new: true })
+    Person.findByIdAndUpdate(id, { name: name, age: age }, { new: true })
         .then(data => {
             if(data)
-                res.json(data)
+                return res.json(data)
             throw new Error('Person not found')
         })
         .catch(err => res.status(500).json({message: err.message}))
 
-    // return Person.save()
-    //     .then(data => res.json(data))
-    //     .catch(err => res.status(500).send(err))
 })
 
 app.delete('/person/:id', (req, res) => {
     const id = req.params.id
 
-    return Person.findByIdAndDelete(id, { new: true })
+    Person.findByIdAndDelete(id, { new: true })
         .then(data =>data ? res.json({message: "Person deleted"}) : res.status(404).json({message: "Person not found"}))
         .catch(err => res.status(500).json({message: err.message}))
 })
