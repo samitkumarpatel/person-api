@@ -25,24 +25,41 @@ const personSchema = new mongoose.Schema({
 const Person = mongoose.model('person', personSchema)
 
 app.get('/person', (req, res) => {
-    return Person.find()
+    Person.find()
         .then(data => res.json(data))
         .catch(err => res.status(500).json({message: err.message}))
 })
 
-app.get('/person/:id', (req, res) => {})
+app.get('/person/:id', (req, res) => {
+    const id = req.params.id
+
+    Person.findById(id)
+    .then(data => {
+        if(data) {
+            res.json(data)
+        } else {
+            res.status(404).json({message: "Person not found"})
+        }
+    })
+    .catch(err => res.status(500).json({message: err.message}))
+})
+
 app.post('/person', (req, res) => {
     const { name, age } = req.body
-
-    const newPerson = new Person(
-        { 
-            name: name, 
-            age: age 
-        }
-    )
-    return newPerson.save()
-        .then(data => res.json(data))
-        .catch(err => res.status(500).json({message: err.message}))
+    if(name && age) {
+        const newPerson = new Person(
+            { 
+                name: name, 
+                age: age 
+            }
+        )
+        newPerson.save()
+            .then(data => res.json(data))
+            .catch(err => res.status(500).json({message: err.message}))
+    } else {
+        res.status(400).json({message: "Not a valid request"})
+    }
+    
 })
 
 app.put('/person/:id', (req, res) => {
@@ -51,9 +68,11 @@ app.put('/person/:id', (req, res) => {
 
     Person.findByIdAndUpdate(id, { name: name, age: age }, { new: true })
         .then(data => {
-            if(data)
-                return res.json(data)
-            throw new Error('Person not found')
+            if(data) {
+                res.json(data)
+            } else {
+                res.status(404).json({message: "Person not found"})
+            }
         })
         .catch(err => res.status(500).json({message: err.message}))
 
@@ -64,6 +83,18 @@ app.delete('/person/:id', (req, res) => {
 
     Person.findByIdAndDelete(id, { new: true })
         .then(data =>data ? res.json({message: "Person deleted"}) : res.status(404).json({message: "Person not found"}))
+        .catch(err => res.status(500).json({message: err.message}))
+})
+
+app.get('/find/person', (req, res) => {
+    const { name, age } = req.query
+    Person.find({ name: {$regex: `${name}`}})
+        .then(data => {
+            if(data)
+                res.json(data)
+            else
+                res.status(404).json({message: "Person not found with the given criteria"})
+        })
         .catch(err => res.status(500).json({message: err.message}))
 })
 
